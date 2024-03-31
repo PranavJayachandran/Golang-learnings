@@ -1,0 +1,38 @@
+package main
+
+import (
+	"io"
+	"log"
+	"net"
+	"os"
+)
+
+func getData(conn net.Conn) string {
+	data := make([]byte, 1024)
+	n, _ := conn.Read(data)
+	return string(data[:n])
+}
+
+func sendFile(conn net.Conn, fileSize int64, fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	for {
+		buffer := make([]byte, min(fileSize, CHUNKSIZE))
+		n, err := file.Read(buffer)
+		if err != nil && err != io.EOF {
+			log.Fatal(err)
+		}
+		if err == io.EOF {
+			return
+		}
+		conn.Write(buffer[:n])
+		fileSize -= int64(n)
+		// To know when the complete file has been send
+		if fileSize <= 0 {
+			break
+		}
+	}
+}
