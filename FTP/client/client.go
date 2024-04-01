@@ -10,9 +10,10 @@ import (
 
 const CHUNKSIZE = 10
 
-func read(conn net.Conn) {
+func read(conn net.Conn, fileName string) {
 	conn.Write([]byte("Read"))
-	conn.Write([]byte(getFileName("Enter the name of the file")))
+	time.Sleep(time.Millisecond * 10)
+	conn.Write([]byte(fileName))
 	buffer := make([]byte, 1024)
 	n, _ := conn.Read(buffer)
 	reply := string(buffer[:n])
@@ -24,11 +25,12 @@ func read(conn net.Conn) {
 	fmt.Println("Incoming file size is ", size)
 	getFile(conn)
 }
-func write(conn net.Conn) {
+func write(conn net.Conn, fileName string, dataToWrite []string) {
 	conn.Write([]byte("Write"))
-	conn.Write([]byte(getFileName("Enter the name of file")))
-	input := getData("Enter the data to be written")
-	conn.Write([]byte(input))
+	time.Sleep(time.Millisecond * 10)
+	conn.Write([]byte(fileName))
+	time.Sleep(time.Millisecond * 10)
+	conn.Write([]byte(strings.Join(dataToWrite, " ")))
 
 	buffer := make([]byte, 1024)
 	n, _ := conn.Read(buffer)
@@ -53,8 +55,8 @@ func changeDirectory(conn net.Conn, directoryName string) {
 }
 func main() {
 	var commands []string = []string{
-		"read\tTo read a file",
-		"write\tTo write a file",
+		"read file_name\tTo read a file",
+		"write file_name data_to_write\tTo write a file",
 		"list\tTo list all the files and folders in the current directory in the remote folder",
 		"cd folder_name\tEnter into a folder",
 	}
@@ -73,13 +75,20 @@ func main() {
 		switch userInput[0] {
 		case "read":
 			{
-
-				read(conn)
+				if len(userInput) != 2 {
+					errorMessage("Should follow the format read file_name")
+					break
+				}
+				read(conn, userInput[1])
 				break
 			}
 		case "write":
 			{
-				write(conn)
+				if len(userInput) < 3 {
+					errorMessage("Should be of format write file_name data_to_write")
+					break
+				}
+				write(conn, userInput[1], userInput[2:])
 				break
 			}
 		case "list":
@@ -97,7 +106,7 @@ func main() {
 		case "cd":
 			{
 				if len(userInput) != 2 {
-					errorMessage("Should follow the format cd folder_name or cd .")
+					errorMessage("Should follow the format cd folder_name or cd ..")
 					break
 				}
 				changeDirectory(conn, userInput[1])

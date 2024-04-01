@@ -23,6 +23,7 @@ func getData(messsage string) string {
 	stdreader := bufio.NewReader(os.Stdin)
 	cmd, _ := stdreader.ReadString('\n')
 	cmd = strings.Trim(cmd, "\n")
+	fmt.Println(cmd)
 	return cmd
 }
 func getFile(conn net.Conn) {
@@ -34,6 +35,7 @@ func getFile(conn net.Conn) {
 			break
 		}
 	}
+
 	fmt.Print("\n\n")
 }
 

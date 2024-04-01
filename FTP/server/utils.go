@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 func getData(conn net.Conn) string {
@@ -29,6 +30,7 @@ func sendFile(conn net.Conn, fileSize int64, fileName string) {
 			return
 		}
 		conn.Write(buffer[:n])
+		time.Sleep(time.Millisecond * 10)
 		fileSize -= int64(n)
 		// To know when the complete file has been send
 		if fileSize <= 0 {

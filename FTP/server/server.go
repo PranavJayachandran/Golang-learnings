@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 )
 
 const CHUNKSIZE = 10
@@ -41,6 +42,7 @@ func handleRead(conn net.Conn) {
 	}
 	fileSize := fl.Size()
 	conn.Write([]byte(strconv.FormatInt(fileSize, 10)))
+	time.Sleep(time.Millisecond * 10)
 	sendFile(conn, fileSize, fileName)
 	fmt.Print("The file has been read ")
 }
@@ -150,8 +152,11 @@ func handleConnection(conn net.Conn) {
 
 func min(a int64, b int64) int64 {
 	if a > b {
+		fmt.Println(a, b, b)
 		return b
 	}
+	fmt.Println(a, b, a)
+
 	return a
 }
 
