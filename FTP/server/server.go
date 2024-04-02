@@ -6,12 +6,13 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 const CHUNKSIZE = 10
 
-var filePath string = "/home/user/Desktop/golang/FTP/server"
+var folderPath string = "/home/user/Desktop/golang/FTP/server"
 
 func main() {
 	ln, err := net.Listen("tcp", ":8000")
@@ -26,24 +27,24 @@ func main() {
 			log.Fatal(err)
 			continue
 		}
-		filePath = "/home/user/Desktop/golang/FTP/server"
+		folderPath = "/home/user/Desktop/golang/FTP/server"
 		go handleConnection(conn)
 	}
 }
 
 func handleRead(conn net.Conn) {
 	var fileName string = getData(conn)
-	//Gets the filesName to give to the user. To check if the user actually wants the file
-	fl, err := os.Stat(fileName)
+	filePath := (folderPath + "/" + fileName)
+	fl, err := os.Stat(filePath)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err, fl)
 		conn.Write([]byte(err.Error()))
 		return
 	}
 	fileSize := fl.Size()
 	conn.Write([]byte(strconv.FormatInt(fileSize, 10)))
 	time.Sleep(time.Millisecond * 10)
-	sendFile(conn, fileSize, fileName)
+	sendFile(conn, fileSize, filePath)
 	fmt.Print("The file has been read ")
 }
 
@@ -67,8 +68,8 @@ func handleWrite(conn net.Conn) {
 	fmt.Println(fileName, data)
 }
 func handleList(conn net.Conn) {
-	fmt.Println(filePath)
-	dir, err := os.Open(filePath)
+	fmt.Println(folderPath)
+	dir, err := os.Open(folderPath)
 	if err != nil {
 		fmt.Println(err)
 		conn.Write([]byte(err.Error()))
@@ -92,9 +93,18 @@ func handleChangeDirectory(conn net.Conn) {
 	buff := make([]byte, 1024)
 	n, _ := conn.Read(buff)
 	folderName := string(buff[:n])
+	if folderName == ".." {
+		index := strings.LastIndex(folderPath, "/")
+		folderPath = folderPath[:index]
+		if len(folderPath) == 0 {
+			folderPath = "/"
+		}
+		conn.Write([]byte("done"))
+		return
+	}
 	fileExists := directoryVerifier(folderName)
 	if fileExists {
-		filePath += "/" + folderName
+		folderPath += "/" + folderName
 		fmt.Println(folderName)
 		conn.Write([]byte("done"))
 	} else {
@@ -108,8 +118,6 @@ func handleConnection(conn net.Conn) {
 		buff := make([]byte, 32768)
 		n, err := conn.Read(buff)
 		if err != nil {
-			fmt.Println("Failed to read")
-			log.Fatal(err)
 			return
 		}
 		operation := string(buff[:n])
@@ -161,7 +169,7 @@ func min(a int64, b int64) int64 {
 }
 
 func directoryVerifier(directoryName string) bool {
-	dir, err := os.Open(filePath)
+	dir, err := os.Open(folderPath)
 	if err != nil {
 		fmt.Println(err)
 		return false

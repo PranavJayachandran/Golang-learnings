@@ -34,6 +34,9 @@ func sendFile(conn net.Conn, fileSize int64, fileName string) {
 		fileSize -= int64(n)
 		// To know when the complete file has been send
 		if fileSize <= 0 {
+			if n == CHUNKSIZE {
+				conn.Write([]byte("\\tOver"))
+			}
 			break
 		}
 	}

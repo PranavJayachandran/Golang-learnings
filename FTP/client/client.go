@@ -101,6 +101,7 @@ func main() {
 				for _, command := range commands {
 					fmt.Println(command)
 				}
+				fmt.Print("\n\n")
 				break
 			}
 		case "cd":
