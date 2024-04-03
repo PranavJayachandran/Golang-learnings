@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"time"
@@ -17,14 +17,18 @@ func getData(conn net.Conn) string {
 func sendFile(conn net.Conn, fileSize int64, fileName string) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		conn.Write([]byte(err.Error()))
 		return
 	}
 	for {
 		buffer := make([]byte, min(fileSize, CHUNKSIZE))
 		n, err := file.Read(buffer)
 		if err != nil && err != io.EOF {
-			log.Fatal(err)
+			fmt.Println(err.Error())
+			conn.Write([]byte(err.Error()))
+			time.Sleep(time.Millisecond * 10)
+			conn.Write([]byte("\\tOver"))
+			return
 		}
 		if err == io.EOF {
 			return
@@ -34,10 +38,7 @@ func sendFile(conn net.Conn, fileSize int64, fileName string) {
 		fileSize -= int64(n)
 		// To know when the complete file has been send
 		if fileSize <= 0 {
-			if n == CHUNKSIZE {
-				conn.Write([]byte("\\tOver"))
-			}
-			break
+			conn.Write([]byte("\\tOver"))
 		}
 	}
 }

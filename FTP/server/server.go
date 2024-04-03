@@ -53,13 +53,13 @@ func handleWrite(conn net.Conn) {
 	var data string = getData(conn)
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
 		conn.Write([]byte(err.Error()))
 		return
 	}
 	_, err = file.WriteString(data)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
 		conn.Write([]byte(err.Error()))
 		return
 	}
